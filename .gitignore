@@ -1,0 +1,13 @@
+*.slxc
+.DS_Store
+**/slprj/
+
+*.aux
+*.log
+*.synctex.gz
+*.out
+*.fdb_latexmk
+*.fls
+*.blg
+*.bbl
+
