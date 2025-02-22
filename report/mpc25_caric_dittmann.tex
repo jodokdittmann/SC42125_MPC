@@ -1,0 +1,169 @@
+\documentclass[10pt,twocolumn,twoside]{IEEEtran}
+
+\IEEEoverridecommandlockouts    
+\overrideIEEEmargins
+
+\usepackage{psfrag}
+\usepackage{amsmath,amssymb,amsfonts,bbm,nicefrac,mathtools,lipsum}
+\usepackage{latexsym}
+\usepackage{graphicx}
+
+
+\usepackage{balance}
+\usepackage{colortbl}
+\usepackage{fancyhdr}
+\usepackage{epstopdf}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{booktabs,tabularx}
+
+%\RequirePackage{fix-cm}
+%\makeatletter 
+%\newcommand{\semiHuge}{\@setfontsize\semiHuge{22 }{27.38}}
+%\makeatother
+
+
+%\usepackage{tikz}
+%\usepackage{pgfplots}
+%\usetikzlibrary{chains}
+%\usetikzlibrary{fit}
+%\usepgfplotslibrary{dateplot}
+%\usetikzlibrary{shapes.symbols,patterns, arrows} % for source symbols
+
+%\newcommand{\ds}{\displaystyle}
+%\newcommand{\qq}{\quad\quad}
+%\newcommand{\Var} {\mathrm{Var}\,}
+%\newcommand{\Cov} {\mathrm{Cov}\,}
+
+%\newtheorem{theorem}{Theorem}
+%\newtheorem{definition}{Definition}
+%\newtheorem{proposition}{Proposition}
+%\newtheorem{lemma}{Lemma}
+%\newtheorem{corollary}{Corollary}
+%\newtheorem{example}{Example}
+%\newtheorem{remark}{Remark}
+%\newtheorem{assumption}{Assumption}
+%\newtheorem{standing}{Standing Assumption}
+%\newtheorem{design}{Design choice}
+
+
+\usepackage{soul}
+\usepackage[ruled]{algorithm2e}
+
+% Commands
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\X}{\mathbb{X}}
+\newcommand{\U}{\mathbb{U}}
+\newcommand{\mc}{\mathcal}
+\newcommand{\A}{\mc{A}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bu}{\mathbf{u}}
+\newcommand{\bbS}{\mathbb{S}}
+
+\newcommand{\prox}{\mathrm{prox}}
+\newcommand{\fix}{\mathrm{fix}}
+\newcommand{\zer}{\mathrm{zer}}
+\newcommand{\Id}{\mathrm{Id}}
+\newcommand{\dist}{\mathrm{dist}}
+\newcommand{\argmin}{\mathrm{argmin}}
+\newcommand{\dom}{\mathrm{dom}}
+\newcommand{\proj}{\mathrm{proj}}
+\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\gph}{\mathrm{gph}}
+
+
+\newcommand{\bs}{\boldsymbol}
+\def\bsu{\boldsymbol{u}}
+\def\bsx{\boldsymbol{x}}
+\def\ni{\noindent}
+\def\xx{\chi}
+\def\ub{\textbf{u}}
+\def\zb{\textbf{z}}
+
+\newcommand{\norm}[1]{\left\|#1\right\|}
+
+\newcommand{\red}{\textcolor{red}}
+\newcommand{\blue}{\textcolor{blue}}
+
+
+%\newcommand*{\defeq}{\mathrel{\vcenter{\baselineskip0.5ex \lineskiplimit0pt
+%\hbox{\scriptsize.}\hbox{\scriptsize.}}}%
+%=}
+
+
+\graphicspath{{./figures/}}
+
+\date{ }
+
+\begin{document}
+
+\title{A model predictive control approach for Some Application...}
+
+\author{Name Surname 1, Name Surname 2, 
+\thanks{Name Surname 1 and Name Surname 2 are master students at TU Delft, The Netherlands. 
+E-mail addresses: \{\texttt{n.surname1, n.surname2}\}\texttt{@student.tudelft.nl}. \smallskip
+}
+}
+\maketitle         
+
+% How to find "Some Application":
+% 1. http://ieeexplore.ieee.org
+% 2. Search "model predictive control" from 201x on
+% 3. Restrict search to "Journals & Magazines"
+% 4. Restrict search to the "Publication Title" (titles) of interest (e.g. Intelligent Transportation Systems, Power Systems, Power Electronics, ...)
+
+
+\begin{abstract}
+We study a model predictive control (MPC) approach for Some Application....
+\end{abstract}
+
+\section{Introduction} \label{sec:intro}
+Some Application is ... relevant for... The standard control strategy for Some Application is... which... cannot handle operational constraints... and/or may result in... non-optimal performance...
+
+The systems dynamics are linear/nonlinear, ... where ... are the system states, ... are the control inputs, and ... are the system outputs.
+
+\section{Model predictive control design}
+
+We consider a receding horizon MPC strategy with control horizon $N=...$
+
+The state constraints are... hence can be represented in compact form as $F x(k) \leq e$, where $F$ is the matrix 
+$$ F = \left[
+\begin{matrix}
+* & * & 0 \\
+* & * & * \\
+* & * & *
+\end{matrix}
+\right]
+ $$
+and $e$ is the vector...
+
+Control input constraints...
+
+Output constraints...
+
+We design the stage cost function $\ell(x,u) = ...$, the terminal cost function $V_{\textup{f}}(x) = ...$, and the terminal set $\mathbb{X}_{\textup{f}} = ...$
+
+\section{Asymptotic stability}
+
+In this section, we show that the designed MPC asymptotically stabilized the closed-loop system. With this aim, we verify the assumptions of Theorem... in the book \cite{rawlings:mayne}
+
+Assumption 2.x: ... 
+
+Assumption 2.y: ...
+
+
+\section{Numerical simulations}
+
+In this section, we run several numerical simulations where we compare some MPC controllers as well as standard controllers used in Some Application.
+
+Since in Some Application, the state/output cannot be accurately measured, we assume the presence of a random measurement disturbance...
+
+Plots... show the effect of shorter/longer control horizon... tuning the cost matrices... Compared with Standard Control, we observe that...
+
+\bibliographystyle{IEEEtran}
+
+\bibliography{mpc_library}
+
+\end{document}
