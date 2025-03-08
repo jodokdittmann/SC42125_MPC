@@ -1,5 +1,10 @@
-function y = pacejka(B, C, D, E, x)
+function [mu_x, mu_y] = pacejka(s_x, s_y, p)
 
-	y = D*sin(C*atan(B*x - E*(B*x - atan(B*x))));
+    s = sqrt(s_x^2 + s_y^2);
+
+	mu = p.D*sin(p.C*atan(p.B*s - p.E*(p.B*s - atan(p.B*s))));
+
+    mu_x = - s_x/s*mu;
+    mu_y = - s_y/s*mu;
 
 end
