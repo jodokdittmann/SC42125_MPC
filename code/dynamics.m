@@ -1,7 +1,7 @@
 function dzetadt = dynamics(zeta, u, p)
 
-	V = zeta(1); beta = zeta(2); psi = zeta(3); dpsidt = zeta(4);
-    delta = u(1); omega_F = u(2); omega_R = u(3);
+	V = zeta(1); beta = zeta(2); psi = zeta(3); dpsidt = zeta(4); delta = zeta(5);
+    ddeltadt = u(1); omega_F = u(2); omega_R = u(3);
 
     V_Fx = V*cos(beta - delta) + dpsidt*p.l_F*sin(delta);
     V_Rx = V*cos(beta);
@@ -33,6 +33,6 @@ function dzetadt = dynamics(zeta, u, p)
     dXdt = V*cos(beta + psi);
     dYdt = V*sin(beta + psi);
 
-    dzetadt = [dVdt; dbetadt; dpsidt; dpsiddt; dXdt; dYdt];
+    dzetadt = [dVdt; dbetadt; dpsidt; dpsiddt; ddeltadt; dXdt; dYdt];
 
 end
