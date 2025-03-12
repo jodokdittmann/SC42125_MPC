@@ -1,8 +1,8 @@
 clear
 init
 
-V_ss = 10;
-R_ss = 10;
+V_ss = 7;
+R_ss = 7;
 beta_ss = -10*pi/180;
 dpsidt_ss = V_ss/R_ss;
 
