@@ -1,9 +1,9 @@
 clear
 init
 
-V_ss = 7;
-R_ss = 7;
-beta_ss = -10.4*pi/180;
+V_ss = 10;
+R_ss = 10;
+beta_ss = -10*pi/180;
 dpsidt_ss = V_ss/R_ss;
 
 [delta_ss, omega_F_ss, omega_R_ss] = equilibria(V_ss, R_ss, beta_ss, p);
