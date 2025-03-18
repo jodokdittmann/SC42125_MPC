@@ -8,68 +8,64 @@ dpsidt_ss = V_ss/R_ss;
 
 % Equilibria
 
-zeta_0 = [V_ss, beta_ss, 0, dpsidt_ss, 0, -40.7*pi/180, 0, 20.44, 58.33];
-[delta_ss, omega_F_ss, omega_R_ss] = equilibria(V_ss, beta_ss, dpsidt_ss, p, zeta_0);
+x_ss = [V_ss; beta_ss; dpsidt_ss];
+u_init = [-40.7*pi/180; 20.44; 58.33];
 
-m = 3;
-n = 6;
+u_ss = equilibria(x_ss, u_init, p);
+
+delta_ss = u_ss(1);
+omega_F_ss = u_ss(2);
+omega_R_ss = u_ss(3);
 
 % Linearisation
 
-syms zeta [n 1]
-syms u [m 1]
+syms x [p.nx 1]
+syms u [p.nu 1]
 
-dzetadt = dynamics(zeta, u, p);
+dxdt = dynamics(x, u, p);
 
-A_c = jacobian(dzetadt([1, 2, 4]), zeta([1, 2, 4]));
-B_c = jacobian(dzetadt([1, 2, 4]), u);
+A_c = jacobian(dxdt, x);
+B_c = jacobian(dxdt, u);
 
-A_c = double(subs(A_c, {zeta1, zeta2, zeta4, u1, u2, u3}, {V_ss, beta_ss, dpsidt_ss, delta_ss, omega_F_ss, omega_R_ss}));
-B_c = double(subs(B_c, {zeta1, zeta2, zeta4, u1, u2, u3}, {V_ss, beta_ss, dpsidt_ss, delta_ss, omega_F_ss, omega_R_ss}));
+A_c = double(subs(A_c, [x; u], [x_ss; u_ss]));
+B_c = double(subs(B_c, [x, u], [x_ss, u_ss]));
 
 % Discretisation
 
-ts = 1e-3;
-tf = 10;
-
-[A_d, B_d] = c2d(A_c, B_c, ts);
+[A_d, B_d] = c2d(A_c, B_c, p.ts);
 
 % Reference
 
-u_r = [delta_ss; omega_F_ss; omega_R_ss];
-zeta_r = [V_ss; beta_ss; dpsidt_ss];
+x_r = x_ss;
+u_r = u_ss;
 
 % MPC
 
-l = 3;
-
-Q = 2*eye(l);
-R = eye(m);
-
-N = 15;
+Q = 2*eye(p.nx);
+R = eye(p.nu);
 
 u_min = [-Inf; -Inf; -Inf];
 u_max = [Inf; Inf; Inf];
-zeta_min = [-Inf; -Inf; -Inf];
-zeta_max = [Inf; Inf; Inf];
+x_min = [-Inf; -Inf; -Inf];
+x_max = [Inf; Inf; Inf];
 
 P = 10*Q;
 
-zeta_0 = zeta_r + 2*rand(3, 1);
-   
-H = blkdiag( kron(speye(N), Q), P, kron(speye(N), R) );
-f = [repmat(-Q*zeta_r, N, 1); -P*zeta_r; repmat(-R*u_r, N, 1)];
-   
-G_eq = [kron(speye(N+1), -speye(l)) + kron(sparse(diag(ones(N, 1), -1)), A_d), kron([sparse(1, N); speye(N)], B_d)];
-g_eq = [-zeta_0; zeros(N*l, 1)];
+x_0 = x_r;
+
+H = blkdiag(kron(speye(p.N), Q), P, kron(speye(p.N), R));
+f = [repmat(-Q*x_r, p.N, 1); -P*x_r; repmat(-R*u_r, p.N, 1)];
+
+G_eq = [kron(speye(p.N + 1), -speye(p.nx)) + kron(sparse(diag(ones(p.N, 1), -1)), A_d), kron([sparse(1, p.N); speye(p.N)], B_d)];
+g_eq = [-x_0; zeros(p.N*p.nx, 1)];
 
 u_eq = g_eq;
-    
-G_ineq = speye((N+1)*l + N*m);  
-g_ineq = [repmat(zeta_min, N+1, 1); repmat(u_min, N, 1)];
 
-u_ineq = [repmat(zeta_max, N+1, 1); repmat(u_max, N, 1)];
-    
+G_ineq = speye((p.N + 1)*p.nx + p.N*p.nu);  
+g_ineq = [repmat(x_min, p.N + 1, 1); repmat(u_min, p.N, 1)];
+
+u_ineq = [repmat(x_max, p.N + 1, 1); repmat(u_max, p.N, 1)];
+
 G_c = [G_eq; G_ineq];
 g_c = [g_eq; g_ineq];
 
@@ -78,25 +74,31 @@ u_c = [u_eq; u_ineq];
 prob = osqp;
 
 prob.setup(H, f, G_c, g_c, u_c, 'verbose', 0);
- 
+
 % Initialisation
 
-U = nan(m, tf/ts + 1); 
-Zeta = nan(n, tf/ts + 1); 
-Zeta(:, 1) = [zeta_0(1); zeta_0(2); rand; zeta_0(3); rand; rand];
+X = nan(p.nx, p.tf/p.ts + 1); 
+X(:, 1) = x_0 + 0.6*rand(p.nx, 1);
+
+Zeta = nan(p.nzeta, p.tf/p.ts + 1);
+Zeta(:, 1) = zeros(p.nzeta, 1);
+
+U = nan(p.nu, p.tf/p.ts + 1); 
 
 % Simulation
 
-for k = 1:tf/ts
+for k = 1:p.tf/p.ts
     sol = prob.solve();
-    U(:, k) = sol.x((N + 1)*l + 1:(N + 1)*l + m);
-    [t, zeta] = ode45(@(t, zeta) dynamics(zeta, U(:, k), p), [(k - 1)*ts k*ts], Zeta(:, k));
+    U(:, k) = sol.x((p.N + 1)*p.nx + 1:(p.N + 1)*p.nx + p.nu);
+    [t, x] = ode45(@(t, x) dynamics(x, U(:, k), p), [(k - 1)*p.ts k*p.ts], X(:, k));
+    [t, zeta] = ode45(@(t, zeta) position(zeta, x(t == t, :)), t, Zeta(:, k));
+    X(:, k + 1) = x(end, :);
     Zeta(:, k + 1) = zeta(end, :);
-    g_c(1:l) = -zeta(end, [1, 2, 4]);
-    u_c(1:l) = -zeta(end, [1, 2, 4]);
+    g_c(1:p.nx) = -x(end, :);
+    u_c(1:p.nu) = -x(end, :);
     prob.update('l', g_c, 'u', u_c);
 end
 
 % Figures
 
-figures(Zeta, U, p, tf, ts)  
+figures(Zeta, X, U, p)  

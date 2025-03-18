@@ -1,28 +1,15 @@
-function [delta_ss, omega_F_ss, omega_R_ss] = equilibria(V_ss, beta_ss, dpsidt_ss, p, x0)
+function u_ss = equilibria(x_ss, u_init, p)
 
-xsol = fsolve(@(x) f(x, V_ss, beta_ss, dpsidt_ss, p), x0);
+gamma_ss = fsolve(@(gamma) f(gamma, x_ss, p), [x_ss; u_init]);
 
-delta_ss = xsol(7);
-omega_F_ss = xsol(8);
-omega_R_ss = xsol(9);
+u_ss = gamma_ss(p.nx + 1:p.nx + p.nu);
 
-function y = f(x, V_ss, beta_ss, dpsidt_ss, p)
-    zeta(1) = x(1); % V
-    zeta(2) = x(2); % beta
-    zeta(3) = x(3); % psi
-    zeta(4) = x(4); % dpsidt
-    zeta(5) = x(5); % X
-    zeta(6) = x(6); % Y
-    u(1) = x(7); % ddeltadt
-    u(2) = x(8); % omega_F
-    u(3) = x(9); % omega_R
-    dzetadt = dynamics(zeta, u, p);
-    y(1) = x(1) - V_ss;
-    y(2) = x(2) - beta_ss;
-    y(3) = x(4) - dpsidt_ss;
-    y(4) = dzetadt(1); % dVdt
-    y(5) = dzetadt(2); % dbetadt
-    y(6) = dzetadt(4); % dpsiddt
+function kappa = f(gamma, x_ss, p)
+    x = gamma(1:p.nx);
+    u = gamma(p.nx + 1:p.nx + p.nu);
+    dxdt = dynamics(x, u, p);
+    kappa(1:p.nx) = gamma(1:p.nx) - x_ss;
+    kappa(p.nx + 1:p.nx + p.nu) = dxdt;
 end
 
 end
