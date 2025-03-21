@@ -1,38 +1,47 @@
 clear
 init
 
+tic
+
+% Equilibria        
 V_ss = 7;
-R_ss = 7;
-beta_ss = -51*pi/180;
-dpsidt_ss = V_ss/R_ss;
+beta_ss = linspace(-40*pi/180, 4*pi/180, 6); 
+R_ss = linspace(7, 14, 4); 
+x_ss = cell(length(beta_ss), length(R_ss)); 
+u_ss = cell(length(beta_ss), length(R_ss)); 
+u_ss{1, 1} = [-40.7*pi/180; 20.44; 58.33]; 
 
-% Equilibria
-
-x_ss = [V_ss; beta_ss; dpsidt_ss];
-u_init = [-40.7*pi/180; 20.44; 58.33];
-
-u_ss = equilibria(x_ss, u_init, p);
-
-delta_ss = u_ss(1);
-omega_F_ss = u_ss(2);
-omega_R_ss = u_ss(3);
-
-% Linearisation
-
+% Linearisation        
 syms x [p.nx 1]
 syms u [p.nu 1]
-
 dxdt = dynamics(x, u, p);
-
-A_c = jacobian(dxdt, x);
-B_c = jacobian(dxdt, u);
-
-A_c = double(subs(A_c, [x; u], [x_ss; u_ss]));
-B_c = double(subs(B_c, [x, u], [x_ss, u_ss]));
+dfdx = matlabFunction(jacobian(dxdt, x), 'Vars', {x, u});
+dfdu = matlabFunction(jacobian(dxdt, u), 'Vars', {x, u});
+A_c = cell(length(beta_ss), length(R_ss)); 
+B_c = cell(length(beta_ss), length(R_ss)); 
 
 % Discretisation
+A_d = cell(length(beta_ss), length(R_ss)); 
+B_d = cell(length(beta_ss), length(R_ss)); 
 
-[A_d, B_d] = c2d(A_c, B_c, p.ts);
+for i = 1:length(beta_ss)
+    for j = 1:length(R_ss)
+        
+        % Equilibria
+        x_ss{i, j} = [V_ss; beta_ss(i); V_ss/R_ss(j)];
+        u_ss{i, j} = equilibria(x_ss{i, j}, u_ss{max(i-1,1), max(j-1,1)}, p);
+       
+        % Linearisation
+        A_c{i, j} = dfdx(x_ss{i, j}, u_ss{i, j});
+        B_c{i, j} = dfdu(x_ss{i, j}, u_ss{i, j});
+        
+        % Discretisation
+        [A_d{i, j}, B_d{i, j}] = c2d(A_c{i, j}, B_c{i, j}, p.ts);
+
+    end
+end
+
+toc
 
 % Reference
 
@@ -41,7 +50,7 @@ u_r = u_ss;
 
 % MPC
 
-Q = 2*eye(p.nx);
+Q = 10*eye(p.nx);
 R = eye(p.nu);
 
 u_min = [-Inf; -Inf; -Inf];
@@ -51,7 +60,7 @@ x_max = [Inf; Inf; Inf];
 
 P = 10*Q;
 
-x_0 = x_r;
+x_0 = [1; 0; 0];
 
 H = blkdiag(kron(speye(p.N), Q), P, kron(speye(p.N), R));
 f = [repmat(-Q*x_r, p.N, 1); -P*x_r; repmat(-R*u_r, p.N, 1)];
@@ -78,7 +87,7 @@ prob.setup(H, f, G_c, g_c, u_c, 'verbose', 0);
 % Initialisation
 
 X = nan(p.nx, p.tf/p.ts + 1); 
-X(:, 1) = x_0 + 0.6*rand(p.nx, 1);
+X(:, 1) = x_0; % + 0.6*rand(p.nx, 1);
 
 Zeta = nan(p.nzeta, p.tf/p.ts + 1);
 Zeta(:, 1) = zeros(p.nzeta, 1);

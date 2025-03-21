@@ -16,7 +16,7 @@ p.nzeta = 3;
 p.nu = 3;
 
 p.ts = 1e-3;
-p.tf = 10;
+p.tf = 30;
 
 p.N = 15;
 
