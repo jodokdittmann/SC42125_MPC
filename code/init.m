@@ -11,13 +11,19 @@ p.B = 7;
 p.C = 1.6;
 p.D = 1;
 
-p.nx = 3;
-p.nzeta = 3;
-p.nu = 3;
+p.n_x = 3;
+p.n_zeta = 3;
+p.n_u = 3;
 
 p.ts = 1e-3;
 p.tf = 30;
 
 p.N = 15;
+
+p.Q = 10*eye(p.n_x);
+p.R = eye(p.n_u);
+p.P = 10*p.Q;
+
+p.n_equi = 15;
 
 
