@@ -17,12 +17,10 @@ syms u [p.nu 1]
 dxdt = dynamics(x, u, p);
 dfdx = matlabFunction(jacobian(dxdt, x), 'Vars', {x, u});
 dfdu = matlabFunction(jacobian(dxdt, u), 'Vars', {x, u});
-A_c = cell(length(beta_ss), length(R_ss)); 
-B_c = cell(length(beta_ss), length(R_ss)); 
 
-% Discretisation
-A_d = cell(length(beta_ss), length(R_ss)); 
-B_d = cell(length(beta_ss), length(R_ss)); 
+% Initialisation
+A = cell(length(beta_ss), length(R_ss)); 
+B = cell(length(beta_ss), length(R_ss)); 
 
 for i = 1:length(beta_ss)
     for j = 1:length(R_ss)
@@ -32,11 +30,11 @@ for i = 1:length(beta_ss)
         u_ss{i, j} = equilibria(x_ss{i, j}, u_ss{max(i-1,1), max(j-1,1)}, p);
        
         % Linearisation
-        A_c{i, j} = dfdx(x_ss{i, j}, u_ss{i, j});
-        B_c{i, j} = dfdu(x_ss{i, j}, u_ss{i, j});
+        A{i, j} = dfdx(x_ss{i, j}, u_ss{i, j});
+        B{i, j} = dfdu(x_ss{i, j}, u_ss{i, j});
         
         % Discretisation
-        [A_d{i, j}, B_d{i, j}] = c2d(A_c{i, j}, B_c{i, j}, p.ts);
+        [A{i, j}, B{i, j}] = c2d(A{i, j}, B{i, j}, p.ts);
 
     end
 end
@@ -45,8 +43,10 @@ toc
 
 % Reference
 
-x_r = x_ss;
-u_r = u_ss;
+x_r = x_ss{1, 1};
+u_r = u_ss{1, 1};
+A = A{1, 1};
+B = B{1, 1};
 
 % MPC
 
@@ -65,7 +65,7 @@ x_0 = [1; 0; 0];
 H = blkdiag(kron(speye(p.N), Q), P, kron(speye(p.N), R));
 f = [repmat(-Q*x_r, p.N, 1); -P*x_r; repmat(-R*u_r, p.N, 1)];
 
-G_eq = [kron(speye(p.N + 1), -speye(p.nx)) + kron(sparse(diag(ones(p.N, 1), -1)), A_d), kron([sparse(1, p.N); speye(p.N)], B_d)];
+G_eq = [kron(speye(p.N + 1), -speye(p.nx)) + kron(sparse(diag(ones(p.N, 1), -1)), A), kron([sparse(1, p.N); speye(p.N)], B)];
 g_eq = [-x_0; zeros(p.N*p.nx, 1)];
 
 u_eq = g_eq;
