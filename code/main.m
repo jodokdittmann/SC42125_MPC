@@ -2,12 +2,14 @@ clear
 init
         
 V_ss = 7;
-beta_ss = linspace(-40*pi/180, 40*pi/180, 15); 
-dpsidt_ss = linspace(1, -1, 15); 
+beta_ss = linspace(-40*pi/180, 40*pi/180, p.n_equi); 
+dpsidt_ss = linspace(1, -1, p.n_equi); 
 
 [x_ss, u_ss] = equilibria(V_ss, beta_ss, dpsidt_ss, p);
 
 [A, B] = matrices(x_ss, u_ss, p);   
+
+Delta = trajectories(x_ss, p);
 
 % Initialisation
 
@@ -22,7 +24,7 @@ U = nan(p.n_u, p.tf/p.ts + 1);
 % Simulation
 
 for k = 1:p.tf/p.ts
-    trim = positionMPC(Zeta(:, k), x_ss, p);
+    trim = positionMPC(Zeta(:, k), Delta, p);
     U(:, k) = dynamicsMPC(A{trim}, B{trim}, x_ss{trim}, u_ss{trim}, X(:, k), p);
     [t, x] = ode45(@(t, x) dynamics(x, U(:, k), p), [(k - 1)*p.ts k*p.ts], X(:, k));
     [t, zeta] = ode45(@(t, zeta) position(zeta, x(t == t, :)), t, Zeta(:, k));
@@ -32,4 +34,4 @@ end
 
 % Figures
 
-figures(Zeta, X, U, p)  
+figures(Zeta, X, U, p)

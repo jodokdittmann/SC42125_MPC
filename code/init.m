@@ -22,8 +22,18 @@ p.N = 15;
 
 p.Q = 10*eye(p.n_x);
 p.R = eye(p.n_u);
-p.P = 10*p.Q;
+p.P = 100*p.Q;
 
-p.n_equi = 15;
+p.n_equi = 9;
+
+R = 10;  
+n = 50;
+l = 30;
+
+p.th = 1.5;
+
+p.X_ref = [linspace(0, l, n), R*sin(linspace(0, pi, n)) + l, l - linspace(0, l, n), - R*sin(linspace(0, pi, n))];
+p.Y_ref = [zeros(1, n) + R, R*cos(linspace(0, pi, n)), zeros(1, n) - R, - R*cos(linspace(0, pi, n))];
+
 
 
