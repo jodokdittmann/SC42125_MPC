@@ -49,7 +49,7 @@ for k = 1:p.tf/p.ts
     Zeta_real(:, k + 1) = zeta_real(end, :);
     X_real(:, k + 1) = x_real(end, :); 
 
-    %EKF states
+    % EKF states
     U(:, k) = dynamicsMPC(A{trim}, B{trim}, x_ss{trim}, u_ss{trim}, X_estimated(:, k), p); % Calculates U using X_hat_k|k
     [t, x] = ode45(@(t, x) dynamics(x, U(:, k), p), [(k - 1)*p.ts k*p.ts], X(:, k));
     X(:, k + 1) = x(end, :); % This is the IRL state
@@ -57,16 +57,17 @@ for k = 1:p.tf/p.ts
     Zeta(:, k + 1) = zeta(end, :); % This is the IRL position
 
     [t, x] = ode45(@(t, x) dynamics(x, U(:, k), p), [(k - 1)*p.ts k*p.ts], X_time_update(:, k));
-    X_time_update(:, k + 1) = x(end, :); % This is the dynamics for EKF
+    X(:, k + 1) = x(end, :); % This is the dynamics for EKF
     [t, zeta] = ode45(@(t, zeta) position(zeta, x(t == t, :)), t, Zeta_EKF(:, k));
     Zeta_EKF(:, k + 1) = zeta(end, :); % This is the EKF position
 
     Zeta_noised(:, k + 1) = Zeta(:, k + 1) + zeta_noise; % yk measurement used in EKF
-        k
-     [X_estimated(:, k+1), P_estimated(:,:, k+1), P_time_update(:,:,k+1) ]= ekf(Zeta_noised(:, k + 1) , Zeta_EKF(:,k+1), X_time_update(:, k), U(:,k), p, P_time_update(:,:,k), R, Q, Fk);
+
+    X_time_update(:, k+1),
+
+    [X_estimated(:, k+1),  = ekf(Zeta_noised(:, k + 1) , Zeta_EKF(:,k+1), X_time_update(:, k), U(:,k), p, P_time_update(:,:,k), R, Q, Fk);
 end
 
 % Figures
 
 figures(Zeta_real, X_real, U_real, p)  
-figures(Zeta_noised, X_estimated, U, p)
