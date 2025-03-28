@@ -1,6 +1,6 @@
-function dxdt = dynamics(x, u, p)
+function dzetadt = dynamics(zeta, u, p)
 
-	V = x(1); beta = x(2); dpsidt = x(3);
+	V = zeta(1); beta = zeta(2); dpsidt = zeta(3);
     delta = u(1); omega_F = u(2); omega_R = u(3);
 
     V_Fx = V*cos(beta - delta) + dpsidt*p.l_F*sin(delta);
@@ -31,6 +31,6 @@ function dxdt = dynamics(x, u, p)
     dbetadt = (f_Fx*sin(delta - beta) + f_Fy*cos(delta - beta) - f_Rx*sin(beta) + f_Ry*cos(beta))/(p.m*V) - dpsidt;
     dpsiddt = (p.l_F*(f_Fx*sin(delta) + f_Fy*cos(delta)) - p.l_R*f_Ry)/p.I_z;
 
-    dxdt = [dVdt; dbetadt; dpsiddt];
+    dzetadt = [dVdt; dbetadt; dpsiddt];
 
 end
