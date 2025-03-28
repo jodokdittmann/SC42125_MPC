@@ -13,7 +13,8 @@ end
 function kappa = f(gamma, zeta_ss, p)
     zeta = gamma(1:p.n_zeta);
     u = gamma(p.n_zeta + 1:p.n_zeta + p.n_u);
-    dzetadt = dynamics(zeta, u, p);
+    dxdt = dynamics([zeta; zeros(p.n_eta, 1)], u, p);
+    dzetadt = dxdt(1:p.n_zeta);
     kappa(1:p.n_zeta) = gamma(1:p.n_zeta) - zeta_ss;
     kappa(p.n_zeta + 1:p.n_zeta + p.n_u) = dzetadt;
 end

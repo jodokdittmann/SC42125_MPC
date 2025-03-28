@@ -15,6 +15,7 @@ p.n_x = 6;
 p.n_zeta = 3;
 p.n_eta = 3;
 p.n_u = 3;
+p.n_y = 4;
 
 p.ts = 1e-3;
 p.tf = 30;
@@ -26,7 +27,7 @@ p.R_MPC = eye(p.n_u);
 p.P_MPC = 100*p.Q_MPC;
 
 p.Q_EKF = eye(p.n_x);
-p.R_EKF = eye(p.n_eta);
+p.R_EKF = eye(p.n_y);
 
 p.n_equi = 9;
 
