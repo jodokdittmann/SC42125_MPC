@@ -20,15 +20,16 @@ Delta = trajectories(zeta_ss, p);
 U = nan(p.n_u, p.tf/p.ts + 1); 
 
 X = nan(p.n_x, p.tf/p.ts + 1); 
-X(:, 1) = [1; 0; 0; 0; 0; 10]; 
+X(:, 1) = [5; pi/4; 0.1; 0; 0; 0]; 
 
 % EKF
 
 X_est = nan(p.n_x, p.tf/p.ts + 1); 
-X_est(:, 1) = [0.1; 0; 0; 0; 0; 10]; 
+X_est(:, 1) = [1; 0; 0; 0; 0; 10]; 
 
 H = [1, zeros(1, 5); zeros(1, 2), 1, zeros(1, 3); zeros(1, 4), 1, 0; zeros(1, 5), 1];
-Y = H*X;
+
+Y = nan(p.n_y, p.tf/p.ts + 1);
 
 P = eye(p.n_x);
 
@@ -39,12 +40,10 @@ for k = 1:p.tf/p.ts
     U(:, k) = MPC(A{trim}, B{trim}, zeta_ss{trim}, u_ss{trim}, X(1:p.n_zeta, k), p);
     [t, x] = ode45(@(t, x) dynamics(x, U(:, k), p), [(k - 1)*p.ts k*p.ts], X(:, k));
     X(:, k + 1) = x(end, :);
-    Y(:, k + 1) = H*X(:, k + 1) + [normrnd(0, 0.01); normrnd(0, 0.01); normrnd(0, 0.1); normrnd(0, 0.1)];
-    [X_est(:, k + 1), P] = EKF(U(:, k), X_est(:, k), H, Y(:, k + 1), P, p);
+    Y(:, k + 1) = measurements(X(:, k + 1), U(:, k), p) + [normrnd(0, 0.01); normrnd(0, 0.01); normrnd(0, 0.01); normrnd(0, 0.1); normrnd(0, 0.1)];
+    [X_est(:, k + 1), P] = EKF(U(:, k), X_est(:, k), Y(:, k + 1), P, p);
 end
 
 % Figures
 
-% figures(X(1:p.n_zeta, :), X(p.n_zeta + 1:p.n_x, :), U, p)
-
-figures(X_est(1:p.n_zeta, :), X_est(p.n_zeta + 1:p.n_x, :), U, p)
+figures(U, X, X_est, Y, p)

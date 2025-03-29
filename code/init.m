@@ -15,7 +15,7 @@ p.n_x = 6;
 p.n_zeta = 3;
 p.n_eta = 3;
 p.n_u = 3;
-p.n_y = 4;
+p.n_y = 5;
 
 p.ts = 1e-3;
 p.tf = 30;
