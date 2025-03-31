@@ -16,15 +16,18 @@ p.n_zeta = 3;
 p.n_eta = 3;
 p.n_u = 3;
 p.n_y = 5;
+p.n_z = 3;
 
-p.ts = 1e-3;
+p.ts = 1e-2;
 p.tf = 30;
 
-p.N = 15;
+p.N = 20;
 
 p.Q_MPC = 10*eye(p.n_zeta);
 p.R_MPC = eye(p.n_u);
-p.P_MPC = 100*p.Q_MPC;
+
+p.Q_KF = eye(p.n_zeta);
+p.R_KF = eye(p.n_z);
 
 p.Q_EKF = eye(p.n_x);
 p.R_EKF = eye(p.n_y);
