@@ -27,7 +27,7 @@ p.tf = 30;
 
 % MPC
 p.N = 20;
-p.Q_MPC = 10*eye(p.n_zeta);
+p.Q_MPC = 100*eye(p.n_zeta);
 p.R_MPC = eye(p.n_u);
 
 % KF
@@ -35,28 +35,16 @@ p.Q_KF = eye(p.n_zeta);
 p.R_KF = eye(p.n_z);
 
 % EKF
-p.Q_EKF = blkdiag(0.1, 0.1, 0.1, 0.1, 0.1, 0.1);
-p.R_EKF = blkdiag(0.01, 0.01, 0.1, 0.1, 0.1);
-
-% UKF
-p.sqrtQ_UKF = chol(p.Q_EKF);
-p.sqrtR_UKF = chol(p.R_EKF);
-kappa = 3 - p.n_x;
-alpha = 0.01;
-beta = 2;
-p.gamma = sqrt(alpha^2*(p.n_x + kappa));
-p.Wm = 1 - p.n_x/(alpha^2*(p.n_x + kappa));
-p.Wc = p.Wm + (1 - alpha^2 + beta);
-p.W = 1/(2*(alpha^2*(p.n_x + kappa)));
+p.Q_EKF = eye(p.n_x);
+p.R_EKF = eye(p.n_y);
 
 % Path Planning
-p.n_equi = 9;
-p.th = 1.5;
+p.n_equi = 15;
+p.th = 1.8;
 R = 10;  
-n = 50;
-l = 30;
-p.X_ref = [linspace(0, l, n), R*sin(linspace(0, pi, n)) + l, l - linspace(0, l, n), - R*sin(linspace(0, pi, n))];
-p.Y_ref = [zeros(1, n) + R, R*cos(linspace(0, pi, n)), zeros(1, n) - R, - R*cos(linspace(0, pi, n))];
+l = 60;
+p.X_ref = [linspace(0, l, l), R*sin(linspace(0, pi, 3*R)) + l, l - linspace(0, l, l), - R*sin(linspace(0, pi, 3*R))];
+p.Y_ref = [zeros(1, l) + R, R*cos(linspace(0, pi, 3*R)), zeros(1, l) - R, - R*cos(linspace(0, pi, 3*R))];
 
 
 

@@ -1,4 +1,4 @@
-function [A, B, C, D, K_MPC, P_MPC] = matrices(zeta_ss, u_ss, p)
+function [A, B, C, D, K_LQR, P_LQR] = matrices(zeta_ss, u_ss, p)
 
     syms zeta [p.n_zeta 1]
     syms u [p.n_u 1]
@@ -15,8 +15,8 @@ function [A, B, C, D, K_MPC, P_MPC] = matrices(zeta_ss, u_ss, p)
     B = cell(p.n_equi, 1);
     C = cell(p.n_equi, 1);
     D = cell(p.n_equi, 1);
-    K_MPC = cell(p.n_equi, 1);
-    P_MPC = cell(p.n_equi, 1);
+    K_LQR = cell(p.n_equi, 1);
+    P_LQR = cell(p.n_equi, 1);
 
     for i = 1:p.n_equi
         A{i} = dfdzeta(zeta_ss{i}, u_ss{i});
@@ -24,7 +24,7 @@ function [A, B, C, D, K_MPC, P_MPC] = matrices(zeta_ss, u_ss, p)
         [A{i}, B{i}] = c2d(A{i}, B{i}, p.ts);
         C{i} = dhdzeta(zeta_ss{i}, u_ss{i});
         D{i} = dhdu(zeta_ss{i}, u_ss{i});
-        [K_MPC{i}, P_MPC{i}, ~] = dlqr(A{i}, B{i}, p.Q_MPC, p.R_MPC);
+        [K_LQR{i}, P_LQR{i}, ~] = dlqr(A{i}, B{i}, p.Q_MPC, p.R_MPC);
     end
 
 end

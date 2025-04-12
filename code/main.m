@@ -5,14 +5,14 @@ init
 %% Equilibria 
 
 V_ss = 7;
-beta_ss = linspace(-40*pi/180, 40*pi/180, p.n_equi); 
-dpsidt_ss = linspace(1, -1, p.n_equi); 
+beta_ss = linspace(-25*pi/180, 25*pi/180, p.n_equi); 
+dpsidt_ss = linspace(1.2, -1.2, p.n_equi); 
 
 [zeta_ss, u_ss] = equilibria(V_ss, beta_ss, dpsidt_ss, p);
 
 %% Motion Primitives
 
-[A, B, C, D, K_MPC, P_MPC] = matrices(zeta_ss, u_ss, p);   
+[A, B, C, D, K_LQR, P_LQR] = matrices(zeta_ss, u_ss, p);   
 
 Delta_eta = trajectories(zeta_ss, p);
 
@@ -22,7 +22,7 @@ Delta_eta = trajectories(zeta_ss, p);
 % or output feedback (2).
 
 traj = 1;
-feedback = 2; 
+feedback = 1; 
 
 %% Steady State
 
@@ -35,36 +35,34 @@ Zeta(:, 1) = zeta_ss{traj};
 Zeta_est = nan(p.n_zeta, p.tf/p.ts + 1); 
 Zeta_est(:, 1) = zeta_ss{traj};
 
-Z = nan(p.n_z, p.tf/p.ts + 1);
+Z_tilde = nan(p.n_z, p.tf/p.ts + 1);
 
 P_KF = eye(p.n_zeta);
 
+zeta_min = [-5; -30*pi/180; -2];
+zeta_max = [5; 30*pi/180; 10];
 u_min = [-pi/4; -300; -300];
 u_max = [pi/4; 300; 300];
 u_Delta = [Inf; Inf; Inf];
 
-% sys = LTISystem('A', A{traj} - B{traj}*K_MPC{traj});
-% % sys.u.min = u_min;
-% % sys.u.max = u_max;
-% sys.x.max = [10; 10; 10];
-% sys.x.min = [-10; -10; -10];
-% opt.maxIterations = 100;
-% invset = sys.invariantSet(opt);
-% figure('Name', 'Invariant Set', 'NumberTitle', 'off')
-% invset.plot()
-% 
-% for k = 1:p.tf/p.ts
-%     switch feedback
-%         case 1 
-%             U(:, k) = MPC(A{traj}, B{traj}, P_MPC{traj}, zeta_ss{traj}, u_ss{traj}, Zeta(:, k), U(:, max(k - 1, 1)), u_min, u_max, u_Delta, p);
-%             Zeta(:, k + 1) = zeta_ss{traj} + A{traj}*(Zeta(:, k) - zeta_ss{traj}) + B{traj}*(U(:, k) - u_ss{traj});
-%         case 2 
-%             Z(:, k) = C{traj}*Zeta(:, k) + D{traj}*U(:, max(k - 1, 1));   
-%             [Zeta_est(:, k), P_KF] = KF(A{traj}, B{traj}, C{traj}, D{traj}, u_ss{traj}, zeta_ss{traj}, U(:, max(k - 1, 1)), Zeta_est(:, max(k - 1, 1)), Z(:, k), P_KF, p);   
-%             U(:, k) = MPC(A{traj}, B{traj}, P_MPC{traj}, zeta_ss{traj}, u_ss{traj}, Zeta_est(:, k), U(:, max(k - 1, 1)), u_min, u_max, u_Delta, p);
-%             Zeta(:, k + 1) = zeta_ss{traj} + A{traj}*(Zeta(:, k) - zeta_ss{traj}) + B{traj}*(U(:, k) - u_ss{traj});
-%     end    
-% end
+[G_f, g_fmin, g_fmax] = terminalset(A{traj}, B{traj}, K_LQR{traj}, zeta_min, zeta_max, u_min, u_max, p);
+
+X_f = Polyhedron('A', [-G_f; G_f], 'b', [-g_fmin; g_fmax]);
+figure('Name', 'Invariant Set 3', 'NumberTitle', 'off')
+plot(X_f);
+
+for k = 1:p.tf/p.ts
+    switch feedback
+        case 1 
+            U(:, k) = MPC(A{traj}, B{traj}, P_LQR{traj}, zeta_ss{traj}, u_ss{traj}, Zeta(:, k), U(:, max(k - 1, 1)), zeta_min, zeta_max, u_min, u_max, G_f, g_fmin, g_fmax, u_Delta, p);
+            Zeta(:, k + 1) = zeta_ss{traj} + A{traj}*(Zeta(:, k) - zeta_ss{traj}) + B{traj}*(U(:, k) - u_ss{traj});
+        case 2 
+            Z_tilde(:, k) = C{traj}*(Zeta(:, k) - zeta_ss{traj}) + D{traj}*(U(:, max(k - 1, 1)) - u_ss{traj});   
+            [Zeta_est(:, k), P_KF] = KF(A{traj}, B{traj}, C{traj}, D{traj}, u_ss{traj}, zeta_ss{traj}, U(:, max(k - 1, 1)), Zeta_est(:, max(k - 1, 1)), Z_tilde(:, k), P_KF, p);   
+            U(:, k) = MPC(A{traj}, B{traj}, P_LQR{traj}, zeta_ss{traj}, u_ss{traj}, Zeta_est(:, k), U(:, max(k - 1, 1)), zeta_min, zeta_max, u_min, u_max, G_f, g_fmin, g_fmax, u_Delta, p);
+            Zeta(:, k + 1) = zeta_ss{traj} + A{traj}*(Zeta(:, k) - zeta_ss{traj}) + B{traj}*(U(:, k) - u_ss{traj});
+    end    
+end
 
 %% Figures
 
@@ -84,21 +82,20 @@ Y = nan(p.n_y, p.tf/p.ts + 1);
 
 P_EKF = eye(p.n_x);
 
-sqrtPx_UKF = eye(p.n_x);
-
-u_Delta = [0.05; 0.1; 0.1];
+zeta_min = [-Inf; -Inf; -Inf];
+zeta_max = [Inf; Inf; Inf];
+% u_Delta = [0.01; 0.1; 0.1];
 
 for k = 1:p.tf/p.ts
     switch feedback
         case 1            
             traj = pathplanning(X(p.n_zeta + 1:p.n_x, k), Delta_eta, p);
-            U(:, k) = MPC(A{traj}, B{traj}, P_MPC{traj}, zeta_ss{traj}, u_ss{traj}, X(1:p.n_zeta, k), U(:, max(k - 1, 1)), u_min, u_max, u_Delta, p);
+            U(:, k) = MPC(A{traj}, B{traj}, P_LQR{traj}, zeta_ss{traj}, u_ss{traj}, X(1:p.n_zeta, k), U(:, max(k - 1, 1)), zeta_min, zeta_max, u_min, u_max, eye(p.n_zeta), zeta_min, zeta_max, u_Delta, p);
         case 2
             Y(:, k) = measurements(X(:, k), U(:, max(k - 1, 1)), p) + [normrnd(0, 0.01); normrnd(0, 0.01); normrnd(0, 0.01); normrnd(0, 0.1); normrnd(0, 0.1)];
-%             [X_est(:, k), P_EKF] = EKF(U(:, max(k - 1, 1)), X_est(:, max(k - 1, 1)), Y(:, k), P_EKF, p);
-            [X_est(:, k), sqrtPx_UKF] = UKF(U(:, max(k - 1, 1)), X_est(:, max(k - 1, 1)), Y(:, k), sqrtPx_UKF, p);
+            [X_est(:, k), P_EKF] = EKF(U(:, max(k - 1, 1)), X_est(:, max(k - 1, 1)), Y(:, k), P_EKF, p);
             traj = pathplanning(X_est(p.n_zeta + 1:p.n_x, k), Delta_eta, p);
-            U(:, k) = MPC(A{traj}, B{traj}, P_MPC{traj}, zeta_ss{traj}, u_ss{traj}, X_est(1:p.n_zeta, k), U(:, max(k - 1, 1)), u_min, u_max, u_Delta, p);   
+            U(:, k) = MPC(A{traj}, B{traj}, P_LQR{traj}, zeta_ss{traj}, u_ss{traj}, X_est(1:p.n_zeta, k), U(:, max(k - 1, 1)), zeta_min, zeta_max, u_min, u_max, eye(p.n_zeta), zeta_min, zeta_max, u_Delta, p);   
     end
     [t, x] = ode45(@(t, x) dynamics(x, U(:, k), p), [(k - 1)*p.ts k*p.ts], X(:, k));
     X(:, k + 1) = x(end, :);

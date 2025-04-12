@@ -1,39 +1,23 @@
-function terminalset()
+function [G_f, g_fmin, g_fmax] = terminalset(A, B, K_LQR, zeta_min, zeta_max, u_min, u_max, p)
 
-    function Xmpi = compute_MPIset(obj, Xc, Uc) 
-            [F, G, nc] = convert_Poly2Mat(Xc, Uc);
-            Fpi = @(i) (F+G*obj.K)*obj.Ak^i;
-            Xpi = @(i) Polyhedron(Fpi(i), ones(size(Fpi(i), 1), 1));
-            Xmpi = Xpi(0);
-            i= 0;
-            while(1) % 
-                i = i + 1;
-                Xmpi_tmp = and(Xmpi, Xpi(i));
-                if Xmpi_tmp == Xmpi
-                    break;
-                else
-                    Xmpi = Xmpi_tmp;
-                end
-            end
-        end
+G = [eye(p.n_zeta); K_LQR];
+G_f = [];
+g_fmin = [];
+g_fmax = [];
+opt = optimoptions('linprog','Display','iter');
 
-end
-
-
-function [F, G, nc] = convert_Poly2Mat(X, U)
-    % Constraints set X and U in Polyhedron form -> F, G matrix form
-    % nc; number of contraint forced by Xc and Uc
-    % F; G; % constraints for state and input: Fx+Gu<=1, where 1 is a voctor
-    poly2ineq = @(poly) poly.A./repmat(poly.b, 1, size(poly.A, 2));
-    F_tmp = poly2ineq(X);
-    G_tmp = poly2ineq(U);
-    if numel(F_tmp)==0
-        F_tmp = zeros(0, X.Dim);
+for k = 0:Inf
+    G_f = [G_f; G*(A - B*K_LQR)^k];
+    g_fmin = [g_fmin; [zeta_min; u_min]];
+    g_fmax = [g_fmax; [zeta_max; u_max]];
+    min = nan(2*p.n_zeta, 1);
+    max = nan(2*p.n_zeta, 1);
+    for i = 1:2*p.n_zeta
+        [~, min(i)] = linprog(G(i, :)*(A - B*K_LQR)^(k+1), [-G_f; G_f], [-g_fmin; g_fmax], [], [], [], [], opt);
+        [~, max(i)] = linprog(-G(i, :)*(A - B*K_LQR)^(k+1), [-G_f; G_f], [-g_fmin; g_fmax], [], [], [], [], opt);
     end
-    if numel(G_tmp)==0
-        G_tmp = zeros(0, U.Dim);
+    if all([-min; -max] <= [-zeta_min; -u_min; zeta_max; u_max])
+        break
     end
-    F = [F_tmp; zeros(size(G_tmp, 1), X.Dim)];
-    G = [zeros(size(F_tmp, 1), U.Dim); G_tmp];
-    nc = size(F, 1);
 end
+    

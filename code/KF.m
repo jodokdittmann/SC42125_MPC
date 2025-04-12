@@ -1,8 +1,7 @@
-function [zeta_est, P] = KF(A, B, C, D, u_ss, zeta_ss, u, zeta_est, z, P, p)
+function [zeta_est, P] = KF(A, B, C, D, u_ss, zeta_ss, u, zeta_est, z_tilde, P, p)
 
     u_tilde = u - u_ss;
     zeta_tilde = zeta_est - zeta_ss;
-    z_tilde = z - C*zeta_ss - D*u_ss;
 
     % Measurement Update
 

@@ -2,7 +2,7 @@ function [zeta_ss, u_ss] = equilibria(V_ss, beta_ss, dpsidt_ss, p)
 
     zeta_ss = cell(p.n_equi, 1); 
     u_ss = cell(p.n_equi, 1); 
-    u_ss{1} = [-40.7*pi/180; 20.44; 58.33]; 
+    u_ss{1} = [-0.0472; 22.3994; 31.0083]; 
   
     for i = 1:p.n_equi
         zeta_ss{i} = [V_ss; beta_ss(i); dpsidt_ss(i)];
