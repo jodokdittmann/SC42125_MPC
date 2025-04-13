@@ -39,13 +39,13 @@ Z_tilde = nan(p.n_z, p.tf/p.ts + 1);
 
 P_KF = eye(p.n_zeta);
 
-zeta_min = [-5; -30*pi/180; -2];
-zeta_max = [5; 30*pi/180; 10];
+zeta_min = [0; -30*pi/180; -2];
+zeta_max = [10; 30*pi/180; 2];
 u_min = [-pi/4; -300; -300];
 u_max = [pi/4; 300; 300];
 u_Delta = [Inf; Inf; Inf];
 
-[G_f, g_fmin, g_fmax] = terminalset(A{traj}, B{traj}, K_LQR{traj}, zeta_min, zeta_max, u_min, u_max, p);
+[G_f, g_fmin, g_fmax] = terminalset(A{traj}, B{traj}, K_LQR{traj}, zeta_min - zeta_ss{traj}, zeta_max - zeta_ss{traj}, u_min - u_ss{traj}, u_max - u_ss{traj}, p);
 
 X_f = Polyhedron('A', [-G_f; G_f], 'b', [-g_fmin; g_fmax]);
 figure('Name', 'Invariant Set 3', 'NumberTitle', 'off')

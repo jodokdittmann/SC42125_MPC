@@ -6,12 +6,12 @@ function u = MPC(A, B, P_LQR, zeta_ss, u_ss, zeta_0, u_0, zeta_min, zeta_max, u_
     g_dyn = [zeta_ss - zeta_0; zeros(p.N*p.n_zeta, 1)];
 
     G_zeta = [speye(p.N*p.n_zeta), zeros(p.N*p.n_zeta, p.N*p.n_u + p.n_zeta); zeros(size(G_f, 1), p.N*p.n_zeta), G_f, zeros(size(G_f, 1), p.N*p.n_u)];  
-    g_zetamin = [repmat(zeta_min, p.N, 1); g_fmin];
-    g_zetamax = [repmat(zeta_max, p.N, 1); g_fmax];
+    g_zetamin = [kron(ones(p.N, 1), zeta_min - zeta_ss); g_fmin];
+    g_zetamax = [kron(ones(p.N, 1), zeta_max - zeta_ss); g_fmax];
 
     G_u = [zeros(p.N*p.n_u, (p.N + 1)*p.n_zeta), speye(p.N*p.n_u)];  
-    g_umin = repmat(u_min, p.N, 1);
-    g_umax = repmat(u_max, p.N, 1);
+    g_umin = kron(ones(p.N, 1), u_min - u_ss);
+    g_umax = kron(ones(p.N, 1), u_max - u_ss);
 
     G_Delta = [zeros(p.N*p.n_zeta, (p.N + 1)*p.n_zeta), kron(speye(p.N), speye(p.n_u)) - kron(sparse(diag(ones(p.N - 1, 1), -1)), speye(p.n_u))];
 
